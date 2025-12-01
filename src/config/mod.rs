@@ -467,4 +467,38 @@ args = ["main"]
             "test_function"
         );
     }
+
+    #[test]
+    fn test_load_tasks_from_include_missing_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let base_dir = temp_dir.path();
+
+        let main_file = base_dir.join("main.toml");
+        fs::write(
+            &main_file,
+            r#"
+include_paths = ["nonexistent.toml"]
+
+[[tasks]]
+protocol = "MiclowStdIO"
+task_name = "main_task"
+
+[tasks.command]
+command = "echo"
+args = ["main"]
+"#,
+        )
+        .unwrap();
+
+        let result = SystemConfig::from_file(main_file.to_string_lossy().to_string());
+        assert!(
+            result.is_err(),
+            "Should return error when include file does not exist"
+        );
+        let error_msg = result.unwrap_err().to_string();
+        assert!(
+            error_msg.contains("Include file not found"),
+            "Error message should mention that include file was not found"
+        );
+    }
 }

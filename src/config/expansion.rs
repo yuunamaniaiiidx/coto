@@ -23,6 +23,11 @@ impl ExpandContext {
             .unwrap_or_else(|| ".".to_string());
         context.set_virtual_env("MICLOW_CONFIG_DIR", &config_dir);
 
+        let current_dir = env::current_dir()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| ".".to_string());
+        context.set_virtual_env("MICLOW_CWD", &current_dir);
+
         context
     }
 
@@ -203,6 +208,17 @@ mod tests {
         let context = ExpandContext::from_config_path("/home/user/config.toml");
         let result = expand_variables("${MICLOW_CONFIG_DIR}", &context).unwrap();
         assert_eq!(result, "/home/user");
+    }
+
+    #[test]
+    fn test_expand_current_working_directory() {
+        let context = ExpandContext::from_config_path("/home/user/config.toml");
+        let result = expand_variables("${MICLOW_CWD}", &context).unwrap();
+        let expected = env::current_dir()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+        assert_eq!(result, expected);
     }
 
     #[test]

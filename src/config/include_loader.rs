@@ -34,13 +34,12 @@ fn load_includes_recursive(
         }
 
         if !Path::new(&full_path).exists() {
-            log::warn!(
+            return Err(anyhow::anyhow!(
                 "Include file not found: {} (base_dir: {}, include_path: {})",
                 full_path,
                 base_dir.display(),
                 include_path
-            );
-            continue;
+            ));
         }
 
         match std::fs::read_to_string(&full_path) {
@@ -80,12 +79,20 @@ fn load_includes_recursive(
                         }
                     }
                     Err(e) => {
-                        log::error!("Failed to parse include file {}: {}", full_path, e);
+                        return Err(anyhow::anyhow!(
+                            "Failed to parse include file {}: {}",
+                            full_path,
+                            e
+                        ));
                     }
                 }
             }
             Err(e) => {
-                log::error!("Failed to read include file {}: {}", full_path, e);
+                return Err(anyhow::anyhow!(
+                    "Failed to read include file {}: {}",
+                    full_path,
+                    e
+                ));
             }
         }
     }
